@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-24_11-21-06_web",
+    "started_at": "2025-10-24 11:21:06",
+    "finished_at": "2025-10-24 11:21:55",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_web/test_1_web.py::test_web_new_user_registration_password_setup",
+      "name": "test_web_new_user_registration_password_setup",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 46.252748643,
+      "error": "tests/tests_web/test_1_web.py:64: in test_web_new_user_registration_password_setup\n    assert codigo == \"\", f\"Code: {codigo}\"\nE   AssertionError: Code: 086833\nE   assert '086833' == ''\nE     \nE     \u001b[0m\u001b[92m+ 086833\u001b[39;49;00m\u001b[90m\u001b[39;49;00m",
+      "order": 1,
+      "dir": "001_test_web_new_user_registration_password_setup_FAILED"
+    }
+  ]
+}

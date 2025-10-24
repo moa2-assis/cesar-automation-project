@@ -1,0 +1,27 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-23_09-50-09_mobile",
+    "started_at": "2025-10-23 09:50:09",
+    "finished_at": "2025-10-23 09:50:34",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_mobile/test_testing_mobile.py::test_mobile_popup_title",
+      "name": "test_mobile_popup_title",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 10.237685906000001,
+      "error": "tests/tests_mobile/test_testing_mobile.py:9: in test_mobile_popup_title\n    assert home.is_visible(*HomeMobile.POPUP_TITLE) is True\nE   AssertionError: assert False is True\nE    +  where False = is_visible(*('id', 'android:id/alertTitle'))\nE    +    where is_visible = <pages.pages_mobile.home_mobile.HomeMobile object at 0x10d7a88e0>.is_visible\nE    +    and   ('id', 'android:id/alertTitle') = HomeMobile.POPUP_TITLE",
+      "order": 1,
+      "dir": "001_test_mobile_popup_title_FAILED",
+      "screenshot": "001_test_mobile_popup_title_FAILED/screenshot_test_mobile_popup_title.png",
+      "video": "001_test_mobile_popup_title_FAILED/video_test_mobile_popup_title.mp4"
+    }
+  ]
+}

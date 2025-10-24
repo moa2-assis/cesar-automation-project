@@ -1,0 +1,2 @@
+2025-10-23 09:46:50 - START tests/tests_web/test_web_testing.py::test_web_open_google
+2025-10-23 09:46:50 - END   tests/tests_web/test_web_testing.py::test_web_open_google | outcome=passed | duration=3.48s

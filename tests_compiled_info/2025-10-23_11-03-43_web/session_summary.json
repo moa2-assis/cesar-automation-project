@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-23_11-03-43_web",
+    "started_at": "2025-10-23 11:03:43",
+    "finished_at": "2025-10-23 11:04:01",
+    "pytest_exitstatus": 0,
+    "total_tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 100.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_web/test_testing_web.py::test_web_open_americanas",
+      "name": "test_web_open_americanas",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 12.614015268,
+      "error": "",
+      "order": 1,
+      "dir": "001_test_web_open_americanas_PASSED"
+    }
+  ]
+}

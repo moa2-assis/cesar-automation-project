@@ -1,0 +1,14 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-24_11-31-09_web",
+    "started_at": "2025-10-24 11:31:09",
+    "finished_at": "2025-10-24 11:31:37",
+    "pytest_exitstatus": 2,
+    "total_tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": []
+}

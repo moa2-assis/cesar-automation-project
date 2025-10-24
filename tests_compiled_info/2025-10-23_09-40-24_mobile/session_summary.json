@@ -1,0 +1,14 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-23_09-40-24_mobile",
+    "started_at": "2025-10-23 09:40:23",
+    "finished_at": "2025-10-23 09:40:24",
+    "pytest_exitstatus": 0,
+    "total_tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": []
+}
