@@ -1,13 +1,22 @@
 import base64
 import json
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
 import pytest
-from appium import webdriver
+
+# Appium / Mobile
+from appium import webdriver as appwd
 from appium.options.common.base import AppiumOptions
 
+# Selenium / Web
+import selenium.webdriver as swd
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FFOptions
+
+# Utils do projeto
 from utils import reporting as R
 from utils.logger import setup_logger
 
@@ -17,8 +26,12 @@ import requests
 # ==========================================================
 # CONFIGURAÇÃO RÁPIDA
 # ==========================================================
-# Define se o dashboard HTML será aberto automaticamente ao fim da execução
-OPEN_DASHBOARD = False  # ⬅️ mude para True se quiser abrir automaticamente
+# Abre o dashboard HTML ao fim da execução
+OPEN_DASHBOARD = False
+# Salva screenshots/vídeos e quaisquer artefatos de erro
+SAVE_ARTIFACTS = False
+# Salva logs em arquivos (session_log.txt e test_log.txt)
+SAVE_EXEC_LOGS = False
 # ==========================================================
 
 # ===== estado da sessão =====
@@ -28,6 +41,25 @@ TEST_COUNTER = 0
 NODEID_TO_TESTDIR = {}
 
 
+# ==========================================================
+# CLI options (para sufixo mobile/web e notificações do browser)
+# ==========================================================
+def pytest_addoption(parser):
+    parser.addoption(
+        "--suite",
+        action="store",
+        default=None,
+        help="Identificador do tipo de suíte: mobile ou web",
+    )
+    parser.addoption(
+        "--notif",
+        action="store",
+        default="allow",  # allow | block | ask
+        help="Controle de notificações do navegador: allow | block | ask (default: allow)",
+    )
+
+
+# ===== helpers =====
 def _timestamp() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -48,9 +80,26 @@ def _sanitize(name: str) -> str:
 
 
 def _write_test_log_line(test_dir: Path, msg: str) -> None:
+    if not SAVE_EXEC_LOGS:
+        return
     (test_dir / "test_log.txt").open("a", encoding="utf-8").write(
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {msg}\n"
     )
+
+
+def _build_console_logger():
+    import logging
+
+    logger = logging.getLogger("pytest-session")
+    logger.setLevel(logging.INFO)
+    logger.handlers = []
+    ch = logging.StreamHandler()
+    fmt = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+    return logger
 
 
 # ===== pytest lifecycle =====
@@ -58,10 +107,33 @@ def _write_test_log_line(test_dir: Path, msg: str) -> None:
 def pytest_sessionstart(session):
     """Cria o 'paizinho' da sessão e inicializa o logger de sessão dentro dele."""
     global LOG, SESSION_DIR
-    SESSION_DIR = Path("tests_compiled_info") / _timestamp()
+
+    # 1) via CLI (--suite=mobile|web)
+    cli_suite = session.config.getoption("--suite")
+    if cli_suite:
+        suite_name = cli_suite.strip().lower()
+    else:
+        # 2) deduz pelos paths passados (ex.: pytest tests/tests_mobile ...)
+        args = getattr(session.config, "args", []) or []
+        joined = " ".join(str(a) for a in args).lower()
+        if "tests_mobile" in joined:
+            suite_name = "mobile"
+        elif "tests_web" in joined:
+            suite_name = "web"
+        else:
+            suite_name = "mixed"
+
+    timestamp = _timestamp()
+    SESSION_DIR = Path("tests_compiled_info") / f"{timestamp}_{suite_name}"
     _ensure_dir(SESSION_DIR)
-    LOG = setup_logger(SESSION_DIR / "session_log.txt")
-    LOG.info(f"=== Pytest session STARTED ===")
+
+    # Logger: arquivo + console (SAVE_EXEC_LOGS=True) ou somente console (False)
+    if SAVE_EXEC_LOGS:
+        LOG = setup_logger(SESSION_DIR / "session_log.txt")
+    else:
+        LOG = _build_console_logger()
+
+    LOG.info("=== Pytest session STARTED ===")
     LOG.info(f"Output dir: {SESSION_DIR}")
 
 
@@ -71,18 +143,18 @@ def pytest_sessionfinish(session, exitstatus):
     R.write_session_summary(SESSION_DIR, exitstatus)
 
     if OPEN_DASHBOARD:
-        R.write_and_open_dashboard(SESSION_DIR)   # abre
-        if LOG:
-            LOG.info("[DASHBOARD] auto-open enabled → abrindo no navegador...")
+        R.write_and_open_dashboard(SESSION_DIR)
+        LOG.info("[DASHBOARD] auto-open enabled → abrindo no navegador...")
     else:
-        R.write_dashboard(SESSION_DIR)            # não abre
-        if LOG:
-            LOG.info("[DASHBOARD] auto-open desativado → apenas gerado no diretório")
+        R.write_dashboard(SESSION_DIR)
+        LOG.info("[DASHBOARD] auto-open desativado → apenas gerado no diretório")
 
-    if LOG:
-        LOG.info(f"=== Pytest session FINISHED (exitstatus={exitstatus}) ===")
-        LOG.info(f"Dashboard: {SESSION_DIR / 'dashboard.html'}")
+    LOG.info(f"=== Pytest session FINISHED (exitstatus={exitstatus}) ===")
+    LOG.info(f"Dashboard: {SESSION_DIR / 'dashboard.html'}")
+    if SAVE_EXEC_LOGS:
         LOG.info(f"Session log: {SESSION_DIR / 'session_log.txt'}")
+    else:
+        LOG.info("Session log: (não gravado em arquivo — SAVE_EXEC_LOGS=False)")
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -91,23 +163,18 @@ def pytest_runtest_setup(item):
     global TEST_COUNTER
     TEST_COUNTER += 1
     item._exec_index = TEST_COUNTER
-    if LOG:
-        LOG.info(f"=== START test {item._exec_index:03d}: {item.nodeid} ===")
+    LOG.info(f"=== START test {item._exec_index:03d}: {item.nodeid} ===")
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Recebe o resultado por fase (setup/call/teardown), cria pasta do teste
-    quando já há outcome final, salva screenshot em falha e alimenta o dashboard."""
+    """Cria pasta do teste, registra resultado e artefatos (quando aplicável)."""
     outcome = yield
     rep = outcome.get_result()
 
     setattr(item, f"rep_{rep.when}", rep)
 
-    should_create_dir = (
-        (rep.when == "call") or
-        (rep.when == "setup" and rep.failed)
-    )
+    should_create_dir = (rep.when == "call") or (rep.when == "setup" and rep.failed)
     if should_create_dir:
         outcome_upper = rep.outcome.upper()
         sanitized = _sanitize(item.name)
@@ -120,15 +187,22 @@ def pytest_runtest_makereport(item, call):
 
         dur = getattr(rep, "duration", None)
         dur_s = f"{dur:.2f}s" if dur is not None else "n/a"
-        if LOG:
-            LOG.info(
-                f"=== END test {item._exec_index:03d}: {item.nodeid} | "
-                f"outcome={rep.outcome} | duration={dur_s} | dir={test_dirname} ==="
-            )
+        LOG.info(
+            f"=== END test {item._exec_index:03d}: {item.nodeid} | "
+            f"outcome={rep.outcome} | duration={dur_s} | dir={test_dirname} ==="
+        )
         _write_test_log_line(test_dir, f"START {item.nodeid}")
-        _write_test_log_line(test_dir, f"END   {item.nodeid} | outcome={rep.outcome} | duration={dur_s}")
+        _write_test_log_line(
+            test_dir, f"END   {item.nodeid} | outcome={rep.outcome} | duration={dur_s}"
+        )
 
-    if rep.failed and "driver" in item.fixturenames and rep.when in ("call", "setup"):
+    # Screenshot automático em falha (APPIUM) — respeita SAVE_ARTIFACTS
+    if (
+        rep.failed
+        and "driver" in item.fixturenames
+        and rep.when in ("call", "setup")
+        and SAVE_ARTIFACTS
+    ):
         test_dir = NODEID_TO_TESTDIR.get(item.nodeid)
         if test_dir:
             driver = item.funcargs.get("driver")
@@ -136,42 +210,52 @@ def pytest_runtest_makereport(item, call):
                 shot_name = f"screenshot_{_sanitize(item.name)}.png"
                 shot_path = test_dir / shot_name
                 driver.get_screenshot_as_file(str(shot_path))
-                if LOG:
-                    LOG.info(f"[ARTIFACT] screenshot -> {shot_path}")
+                LOG.info(f"[ARTIFACT] screenshot -> {shot_path}")
                 R.add_screenshot(item, _rel_to_session(shot_path))
                 _write_test_log_line(test_dir, f"ARTIFACT screenshot: {shot_name}")
 
 
+# ==========================================================
+# FIXTURE PARA TESTES MOBILE (APPIUM)
+# ==========================================================
 @pytest.fixture(scope="function")
 def driver(request):
     options = AppiumOptions()
-    options.load_capabilities({
-        "platformName": "Android",
-        "appium:deviceName": "emulator-5554",
-        "appium:automationName": "UiAutomator2",
-        "appium:appPackage": "com.automationmodule",
-        "appium:ensureWebviewsHavePages": True,
-        "appium:nativeWebScreenshot": True,
-        "appium:newCommandTimeout": 3600,
-        "appium:connectHardwareKeyboard": True,
-    })
+    options.load_capabilities(
+        {
+            "platformName": "Android",
+            "appium:deviceName": "emulator-5554",
+            "appium:automationName": "UiAutomator2",
+            "appium:appPackage": "com.b2w.americanas",
+            "appium:ensureWebviewsHavePages": True,
+            "appium:nativeWebScreenshot": True,
+            "appium:newCommandTimeout": 30000,
+            "appium:connectHardwareKeyboard": True,
+            "appium:appWaitActivity": "com.b2w.americanas.MainActivity",
+            "appium:appWaitDuration": 30000,
+            "appium:autoGrantPermissions": True,
+        }
+    )
     try:
-        _driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
-        _driver.start_recording_screen()
+        _driver = appwd.Remote("http://127.0.0.1:4723", options=options)
+        if SAVE_ARTIFACTS:
+            _driver.start_recording_screen()
 
         meta = {
             "session_id": getattr(_driver, "session_id", ""),
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "capabilities": getattr(_driver, "capabilities", {}) or {},
         }
-        (SESSION_DIR / "session_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        (SESSION_DIR / "session_meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
+        )
 
-        if LOG:
-            LOG.info(f"[DRIVER] session started: {getattr(_driver, 'session_id', 'n/a')}")
+        LOG.info(f"[DRIVER] session started: {getattr(_driver, 'session_id', 'n/a')}")
     except Exception as e:
-        if LOG:
-            LOG.error(f"[DRIVER] failed to create Appium driver: {type(e).__name__}: {e}")
-            LOG.error("Dica: verifique se o Appium Server está on em http://127.0.0.1:4723 e se o emulator-5554 está rodando (adb devices).")
+        LOG.error(f"[DRIVER] failed to create Appium driver: {type(e).__name__}: {e}")
+        LOG.error(
+            "Dica: verifique se o Appium Server está on em http://127.0.0.1:4723 e se o emulator-5554 está rodando (adb devices)."
+        )
         pytest.skip(f"Failed to create Appium driver: {e}")
 
     yield _driver
@@ -179,38 +263,102 @@ def driver(request):
     try:
         rep_call = getattr(request.node, "rep_call", None)
         rep_setup = getattr(request.node, "rep_setup", None)
-        failed = (
-            (rep_call and rep_call.failed) or
-            (rep_setup and rep_setup.failed)
-        )
+        failed = (rep_call and rep_call.failed) or (rep_setup and rep_setup.failed)
         test_dir = NODEID_TO_TESTDIR.get(request.node.nodeid)
 
-        if failed and test_dir:
+        if failed and test_dir and SAVE_ARTIFACTS:
             vid_name = f"video_{_sanitize(request.node.name)}.mp4"
             video_path = test_dir / vid_name
-            data = _driver.stop_recording_screen()
+            data = None
+            try:
+                data = _driver.stop_recording_screen()
+            except Exception:
+                data = None
             if data:
                 video_path.write_bytes(base64.b64decode(data))
-                if LOG:
-                    LOG.info(f"[ARTIFACT] video -> {video_path}")
+                LOG.info(f"[ARTIFACT] video -> {video_path}")
                 R.add_video(request.node, _rel_to_session(video_path))
                 _write_test_log_line(test_dir, f"ARTIFACT video: {vid_name}")
         else:
-            _ = _driver.stop_recording_screen()
+            try:
+                _ = _driver.stop_recording_screen()
+            except Exception:
+                pass
     finally:
-        if LOG:
-            LOG.info("[DRIVER] quitting session")
+        LOG.info("[DRIVER] quitting session")
         _driver.quit()
 
+
+# ==========================================================
+# FIXTURE PARA TESTES WEB (SELENIUM) — Chrome / Firefox
+# ==========================================================
+@pytest.fixture(scope="function")
+def browser(request):
+    """Inicializa Chrome ou Firefox para testes WEB e integra ao dashboard."""
+    browser_name = os.getenv("BROWSER", "chrome").lower()
+    notif_mode = (request.config.getoption("--notif") or "allow").lower()
+    notif_map = {"allow": 1, "block": 2, "ask": 0}
+    notif_value = notif_map.get(notif_mode, 1)
+
+    # --- cria driver ---
+    if browser_name == "firefox":
+        opts = FFOptions()
+        # Permissões no Firefox (1=allow, 2=block, 0=ask)
+        opts.set_preference("permissions.default.desktop-notification", notif_value)
+        opts.set_preference("permissions.default.geo", notif_value)
+        opts.set_preference("dom.webnotifications.enabled", True)
+        opts.set_preference("dom.push.enabled", True)
+        drv = swd.Firefox(options=opts)
+        drv.set_window_size(1366, 768)
+    else:
+        opts = ChromeOptions()
+        opts.add_argument("--window-size=1366,768")
+        # 1=allow, 2=block, 0=ask
+        opts.add_experimental_option(
+            "prefs",
+            {"profile.default_content_setting_values.notifications": notif_value},
+        )
+        drv = swd.Chrome(options=opts)
+
+    LOG.info(
+        f"[WEB] Browser session started ({browser_name}). notifications={notif_mode}"
+    )
+
+    yield drv
+
+    # --- teardown (screenshot em falha + dashboard) ---
+    try:
+        rep_call = getattr(request.node, "rep_call", None)
+        rep_setup = getattr(request.node, "rep_setup", None)
+        failed = (rep_call and rep_call.failed) or (rep_setup and rep_setup.failed)
+        test_dir = NODEID_TO_TESTDIR.get(request.node.nodeid)
+
+        if failed and test_dir and SAVE_ARTIFACTS:
+            shot_name = f"screenshot_{_sanitize(request.node.name)}.png"
+            shot_path = test_dir / shot_name
+            drv.save_screenshot(str(shot_path))
+            LOG.info(f"[WEB ARTIFACT] screenshot -> {shot_path}")
+            R.add_screenshot(request.node, _rel_to_session(shot_path))
+            _write_test_log_line(test_dir, f"ARTIFACT screenshot: {shot_name}")
+    finally:
+        LOG.info("[WEB] Quitting browser.")
+        drv.quit()
+
+
+# ==========================================================
+# Fixtures auxiliares para APIs/CSV
+# ==========================================================
 @pytest.fixture(scope="session")
 def base_json_url():
     """Returns the base URL for the JSONPlaceholder API."""
     return "https://jsonplaceholder.typicode.com"
 
+
 @pytest.fixture(scope="session")
 def base_httpbin_url():
     """Returns the base URL for the httpbin API."""
     return "https://httpbin.org"
+
 
 @pytest.fixture(scope="function")
 def api_client():

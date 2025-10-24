@@ -1,0 +1,10 @@
+2025-10-23 09:46:05 - automation_tests - INFO - === Pytest session STARTED ===
+2025-10-23 09:46:05 - automation_tests - INFO - Output dir: tests_compiled_info/2025-10-23_09-46-05_web
+2025-10-23 09:46:05 - automation_tests - INFO - === START test 001: tests/tests_web/test_web_testing.py::test_web_open_google ===
+2025-10-23 09:46:17 - automation_tests - INFO - [WEB] Browser session started.
+2025-10-23 09:46:19 - automation_tests - INFO - === END test 001: tests/tests_web/test_web_testing.py::test_web_open_google | outcome=passed | duration=1.56s | dir=001_test_web_open_google_PASSED ===
+2025-10-23 09:46:19 - automation_tests - INFO - [WEB] Quitting browser.
+2025-10-23 09:46:19 - automation_tests - INFO - [DASHBOARD] auto-open desativado → apenas gerado no diretório
+2025-10-23 09:46:19 - automation_tests - INFO - === Pytest session FINISHED (exitstatus=0) ===
+2025-10-23 09:46:19 - automation_tests - INFO - Dashboard: tests_compiled_info/2025-10-23_09-46-05_web/dashboard.html
+2025-10-23 09:46:19 - automation_tests - INFO - Session log: tests_compiled_info/2025-10-23_09-46-05_web/session_log.txt

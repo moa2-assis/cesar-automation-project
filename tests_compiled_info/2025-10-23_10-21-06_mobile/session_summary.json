@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-23_10-21-06_mobile",
+    "started_at": "2025-10-23 10:21:06",
+    "finished_at": "2025-10-23 10:21:33",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_mobile/test_testing_mobile.py::test_mobile_popup_title",
+      "name": "test_mobile_popup_title",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 0.00020736500000140268,
+      "error": "tests/tests_mobile/test_testing_mobile.py:10: in test_mobile_popup_title\n    assert home_page.is_visible(*HomeMobile.get_permission_title) is True\nE   TypeError: pages.base_page.BasePage.is_visible() argument after * must be an iterable, not function",
+      "order": 1,
+      "dir": "001_test_mobile_popup_title_FAILED"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-24_11-03-30_web",
+    "started_at": "2025-10-24 11:03:30",
+    "finished_at": "2025-10-24 11:04:18",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_web/test_1_web.py::test_web_new_user_registration_password_setup",
+      "name": "test_web_new_user_registration_password_setup",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 45.574995405,
+      "error": "tests/tests_web/test_1_web.py:59: in test_web_new_user_registration_password_setup\n    access_code = temp_mail.get_access_code()\npages/pages_web/web_temp_mail_page.py:25: in get_access_code\n    self.wait_for_visibility(*self.NEW_MESSAGE_SUBJECTS)\npages/base_page.py:18: in wait_for_visibility\n    return self.wait.until(EC.visibility_of_element_located((by, locator)))\nmyproject/lib/python3.9/site-packages/selenium/webdriver/support/wait.py:138: in until\n    raise TimeoutException(message, screen, stacktrace)\nE   selenium.common.exceptions.TimeoutException: Message: \nE   Stacktrace:\nE   0   chromedriver                        0x0000000108bd5028 chromedriver + 6361128\nE   1   chromedriver                        0x0000000108bcc72a chromedriver + 6326058\nE   2   chromedriver                        0x000000010862cc20 chromedriver + 429088\nE   3   chromedriver                        0x000000010867ed1b chromedriver + 765211\nE   4   chromedriver                        0x000000010867efe1 chromedriver + 765921\nE   5   chromedriver                        0x00000001086cef44 chromedriver + 1093444\nE   6   chromedriver                        0x00000001086a4e2d chromedriver + 921133\nE   7   chromedriver                        0x00000001086cc26e chromedriver + 1081966\nE   8   chromedriver                        0x00000001086a4bd3 chromedriver + 920531\nE   9   chromedriver                        0x00000001086708ff chromedriver + 706815\nE   10  chromedriver                        0x0000000108671dc1 chromedriver + 712129\nE   11  chromedriver                        0x0000000108b92fc0 chromedriver + 6090688\nE   12  chromedriver                        0x0000000108b96e55 chromedriver + 6106709\nE   13  chromedriver                        0x0000000108b6e287 chromedriver + 5939847\nE   14  chromedriver                        0x0000000108b978cf chromedriver + 6109391\nE   15  chromedriver                        0x0000000108b5d5f4 chromedriver + 5871092\nE   16  chromedriver                        0x0000000108bb9a78 chromedriver + 6249080\nE   17  chromedriver                        0x0000000108bb9c3c chromedriver + 6249532\nE   18  chromedriver                        0x0000000108bcc301 chromedriver + 6324993\nE   19  libsystem_pthread.dylib             0x00007ff808c07e59 _pthread_start + 115\nE   20  libsystem_pthread.dylib             0x00007ff808c03857 thread_start + 15",
+      "order": 1,
+      "dir": "001_test_web_new_user_registration_password_setup_FAILED"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-24_08-48-12_web",
+    "started_at": "2025-10-24 08:48:12",
+    "finished_at": "2025-10-24 08:48:22",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_web/test_1_web.py::test_web_new_user_registration_password_setup",
+      "name": "test_web_new_user_registration_password_setup",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 7.737352517,
+      "error": "tests/tests_web/test_1_web.py:36: in test_web_new_user_registration_password_setup\n    assert not home.is_visible(*HomeWeb.BODY)\nE   AssertionError: assert not True\nE    +  where True = is_visible(*('tag name', 'body'))\nE    +    where is_visible = <pages.pages_web.home_web.HomeWeb object at 0x111a61790>.is_visible\nE    +    and   ('tag name', 'body') = HomeWeb.BODY",
+      "order": 1,
+      "dir": "001_test_web_new_user_registration_password_setup_FAILED"
+    }
+  ]
+}

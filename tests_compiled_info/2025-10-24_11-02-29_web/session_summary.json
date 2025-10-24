@@ -1,0 +1,25 @@
+{
+  "session_info": {
+    "timestamp": "2025-10-24_11-02-29_web",
+    "started_at": "2025-10-24 11:02:29",
+    "finished_at": "2025-10-24 11:03:05",
+    "pytest_exitstatus": 1,
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.0
+  },
+  "tests": [
+    {
+      "nodeid": "tests/tests_web/test_1_web.py::test_web_new_user_registration_password_setup",
+      "name": "test_web_new_user_registration_password_setup",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 33.058892158,
+      "error": "tests/tests_web/test_1_web.py:59: in test_web_new_user_registration_password_setup\n    access_code = temp_mail.get_access_code()\npages/pages_web/web_temp_mail_page.py:25: in get_access_code\n    self.wait_for_visibility(self.NEW_MESSAGE_SUBJECTS)\nE   TypeError: wait_for_visibility() missing 1 required positional argument: 'locator'",
+      "order": 1,
+      "dir": "001_test_web_new_user_registration_password_setup_FAILED"
+    }
+  ]
+}
