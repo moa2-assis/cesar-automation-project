@@ -1,4 +1,4 @@
-# Test Automation — README
+# Test Automation — README ![version](https://img.shields.io/badge/version-v0.2.0-blue)
 
 ## Visão geral
 Este repo contém automações **WEB (Selenium)** e **MOBILE (Appium)** com:
@@ -111,33 +111,6 @@ pytest -m mobile
 
 ---
 
-## Page Objects (resumo)
-
-### Base genérica (`BasePage`)
-- Wait helpers: `find_element`, `wait_for_visibility`, `wait_clickable`
-- Ações: `click`, `type`, `get_text`, `is_visible`, `attr`
-
-### WEB (`WebBasePage`)
-- `open(url)`
-- `js_click(by, locator)`
-- `scroll_into_view(by, locator, block='center')`
-- `switch_to_tab(index)`
-
-### Web — casos práticos já implementados
-- **Fechar banner** Insider: `HomeWeb.close_banner_if_present()`  
-  Busca `div[id^='ins-responsive-banner-']` e tenta clicar no “X” (wrapper/botão/svg), com fallback JS.
-- **Login link**: locator por classe **prefixada** (`ButtonLogin_Container__`) + `href^='/login'`  
-  `HomeWeb.click_login_link()` usa `element_to_be_clickable` + fallback JS click.
-
-### Temp Mail (Web)
-- `WebTempMailPage.open_temp_mail_in_new_tab()` — abre **em nova aba** e guarda handles
-- `get_temp_email_value(timeout=20)` — espera `#email` com `value` contendo `@`
-- `switch_to_temp_tab()` / `switch_to_main_tab()` — alterna abas
-- `click_refresh_button()` — clica no `div.refresh`
-- `get_access_code_burraço()` — procura assunto com “código de acesso” e extrai **6 dígitos** (últimos)
-
----
-
 ## Execução — exemplos
 ```bash
 # Web (Chrome), permitir notificações
@@ -169,7 +142,25 @@ pytest          tests/tests_mobile --suite=mobile -q
 
 ---
 
-## Progress Log (tipo changelog)
+## Progress Log
+
+**2025-10-27**
+✅ **Web – Cenário 1 finalizado (Login + Definir Senha):**
+- Cadastro de usuário **novo e aleatório** usando temp-mail
+- Captura e uso de **token de acesso** em tempo real
+- Fluxo de **Autenticação > Definir senha**
+  - Validação de regras de senha (JSON `testing.json`)
+  - Senhas inválidas → botão **desabilitado**
+  - Senha válida → botão **habilitado**
+- Verificação final:
+  - Máscara de senha (************) exibida corretamente
+- Teste estável e **100% automatizado** do início ao fim ✅
+
+> 🔹 Arquivo principal: `tests/tests_web/test_1_web.py`  
+> 🔹 Page Objects envolvidos: `WebHomePage`, `WebLoginPage`, `WebTempMailPage`, `WebAccountPage`  
+> 🔹 Dados externos: `data/testing.json`
+
+---
 
 **2025-10-24**
 - **Repo/estrutura inicial:** `pages_*`, `tests_*`, `tests_compiled_info/`, utils (`logger`, `reporting`)
@@ -178,13 +169,11 @@ pytest          tests/tests_mobile --suite=mobile -q
   - CLI: `--suite`, `--notif`
   - Sessão: `tests_compiled_info/<timestamp>_<suite>/`
 - **Mobile base:** Appium Android sobe app, vídeo em falhas quando habilitado
-- **Web – Cenário 1 (steps 1–6):**
+- **Web – Cenário 1 (steps 1–6 iniciais):**
   - Acessa Americanas
   - Fecha banner Insider (selector escopado + fallback JS)
-  - Clica link de login (classe prefixada + `href^='/login'`)
-  - Abre Temp Mail em **nova aba**
-  - Captura e-mail (`#email` com `value` != vazio, contendo `@`)
-  - Alterna abas (temp ↔ main) e preenche fluxo de login (submit e-mail)
-- **Git flow (adotado a partir de hoje):**
-  - 1 branch por cenário → PR → `main`
-  - `feature/scenario-01-web` para continuar os próximos passos
+  - Clica link de login
+  - Abre Temp Mail em nova aba
+  - Captura e-mail temporário
+  - Alterna abas e preenche fluxo inicial de login
+- **Git flow** (Squash & Merge por cenário)

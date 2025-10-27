@@ -1,0 +1,17 @@
+{
+    "web": {
+        "invalid_passwords": {
+            "lessthan8char": "Olaola1",
+            "nonumbers": "Olaolaola",
+            "nolowercase": "OLAOLAOLA1",
+            "nouppercase": "olaolaola1"
+        },
+        "valid_password": "Olaolaola1"
+    },
+    "api": {
+        "base_url": "https://jsonplaceholder.typicode.com/"
+    },
+    "mobile": {
+        "dale": "oi teste"
+    }
+}
