@@ -1,6 +1,7 @@
 # pages/base_page.py
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
 
 class BasePage:
@@ -22,7 +23,11 @@ class BasePage:
 
     # ações básicas
     def click(self, by, locator):
-        self.wait_clickable(by, locator).click()
+        try:
+            self.wait_clickable(by, locator).click()
+        except:
+            el = self.find_element(by, locator)
+            self.driver.execute_script("arguments[0].click();", el)
 
     def type(self, by, locator, text: str, clear_first: bool = True):
         el = self.wait_for_visibility(by, locator)
@@ -42,3 +47,22 @@ class BasePage:
 
     def attr(self, by, locator, name: str):
         return self.find_element(by, locator).get_attribute(name)
+
+    def clear_field(self, by, locator):
+        """Limpa um input genérico."""
+        el = self.wait_for_visibility(by, locator)
+        try:
+            el.clear()
+        except Exception:
+            pass
+        # garante limpeza (VTEX às vezes ignora clear)
+        try:
+            el.send_keys(Keys.CONTROL, "a")
+            el.send_keys(Keys.DELETE)
+        except Exception:
+            try:
+                el.send_keys(Keys.COMMAND, "a")  # macOS
+                el.send_keys(Keys.DELETE)
+            except Exception:
+                pass
+        return el

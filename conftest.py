@@ -40,7 +40,6 @@ SESSION_DIR: Optional[Path] = None
 TEST_COUNTER = 0
 NODEID_TO_TESTDIR = {}
 
-
 # ==========================================================
 # CLI options (para sufixo mobile/web e notificações do browser)
 # ==========================================================
@@ -376,3 +375,18 @@ def load_csv_test_cases(path: str):
         for row in reader:
             cases.append(row)
     return cases
+
+
+@pytest.fixture(scope="session")
+def json_data(pytestconfig):
+    """Carrega o JSON de dados para os testes, a partir da raiz do projeto."""
+    root_dir = Path(pytestconfig.rootpath)  # ex.: /Users/moa/cesar-automation-project
+    json_path = (
+        root_dir / "data" / "testing.json"
+    )  # ex.: /Users/moa/cesar-automation-project/data/testing.json
+
+    if not json_path.exists():
+        raise FileNotFoundError(f"Arquivo JSON de testes não encontrado: {json_path}")
+
+    with json_path.open(encoding="utf-8") as f:
+        return json.load(f)

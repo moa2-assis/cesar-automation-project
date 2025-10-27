@@ -17,6 +17,8 @@ class WebTempMailPage(WebBasePage):
     REFRESH_BUTTON = (By.CSS_SELECTOR, "div.refresh.truncate.w-full")
     NEW_MESSAGE_SUBJECTS = (By.CSS_SELECTOR, "span.message__subject")
 
+    previous_codes = set()
+
     def wait_subjects_present(self, timeout: int = 20, refresh_each: int = 4):
         """
         Espera aparecer AO MENOS 1 assunto na lista.
@@ -159,3 +161,26 @@ class WebTempMailPage(WebBasePage):
         """Volta o foco para a aba principal (Americanas)."""
         if hasattr(self, "main_handle"):
             self.driver.switch_to.window(self.main_handle)
+
+    def get_fresh_access_code(self, tries: int = 20, pause: float = 1.0) -> str:
+        self.wait_for_visibility(*self.NEW_MESSAGE_SUBJECTS)
+        for i in range(tries):
+            els = self.driver.find_elements(*self.NEW_MESSAGE_SUBJECTS)
+            for el in els:
+                raw = el.text.strip()
+                digits = "".join(ch for ch in raw if ch.isdigit())
+                if len(digits) >= 6:
+                    code = digits[-6:]
+                    if code not in self.previous_codes:
+                        self.previous_codes.add(code)
+                        print(f"[TempMail] Novo código encontrado: {code}")
+                        return code
+
+            try:
+                self.click_refresh_button()
+            except:
+                pass
+
+            time.sleep(pause)
+
+        raise AssertionError("Nenhum código novo encontrado.")

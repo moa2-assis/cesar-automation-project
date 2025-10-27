@@ -1,4 +1,5 @@
 # pages/pages_web/home_web.py
+import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,7 +10,6 @@ from selenium.common.exceptions import (
 )
 
 from pages.pages_web.web_base_page import WebBasePage
-from pages.pages_web.web_login_page import WebLoginPage
 
 class WebHomePage(WebBasePage):
     SEARCH_INPUT = (By.ID, "search-input")
@@ -18,14 +18,19 @@ class WebHomePage(WebBasePage):
     BANNER = (By.ID, "ins-responsive-banner")
     BANNER_CLOSE = (By.CSS_SELECTOR, "#ins-responsive-banner svg.show-element")
 
-    LOGIN_LINK = (
+    LOGIN_HEADER = (
         By.CSS_SELECTOR,
         "a[class*='ButtonLogin_Container__'][href^='/login']",
     )
 
+    ACCOUNT_HEADER = (
+        By.CSS_SELECTOR,
+        "div[class*='ButtonLogin_textContainer__'] span"
+    )
+
     def click_login_link(self) -> bool:
         try:
-            el = self.wait.until(EC.element_to_be_clickable(self.LOGIN_LINK))
+            el = self.wait.until(EC.element_to_be_clickable(self.LOGIN_HEADER))
             self.driver.execute_script(
                 "arguments[0].scrollIntoView({block:'center'});", el
             )
@@ -42,17 +47,6 @@ class WebHomePage(WebBasePage):
 
     def type_query(self, text: str):
         self.type(*self.SEARCH_INPUT, text=text)
-
-    def try_click_normal_then_js(self, by, locator) -> bool:
-        try:
-            self.click(by, locator)
-            return True
-        except Exception:
-            try:
-                self.js_click(by, locator)
-                return True
-            except Exception:
-                return False
 
     def close_banner_if_present(self) -> bool:
         """
@@ -102,3 +96,24 @@ class WebHomePage(WebBasePage):
                 return True
         except Exception:
             pass
+
+    def wait_search_input_visibility(self):
+        try:
+            americanas_icon = self.wait.until(
+                EC.presence_of_element_located(self.SEARCH_INPUT)
+            )
+            return True
+        except Exception:
+            return False 
+
+    def get_user_logged_email(self):
+        el = self.wait_for_visibility(*self.ACCOUNT_HEADER)
+        text = (el.text or "").strip()
+
+        # regex para email
+        m = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
+        return (m.group(0) if m else text.splitlines()[-1]).strip().lower()
+
+    def click_my_account(self):
+        el = self.wait_for_visibility(*self.ACCOUNT_HEADER)
+        el.click()
