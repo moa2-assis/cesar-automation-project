@@ -122,6 +122,9 @@ Filtragem:
 ## Progress Log
 
 **2025-10-30**  
+**Tag:** `v0.3.0`  
+**Process note:** estes cenários foram commitados diretamente na `main` por engano. Mantive como baseline com a tag `v0.3.0`. A partir de agora: branch por cenário + PR com **squash & merge**.
+
 ✅ **Web – Cenário 6 finalizado (Login com e-mail + senha válidos):**  
 - Localizadores robustos para campos **e-mail** e **senha**  
 - Botão “Entrar com email e senha” via XPath resiliente  
