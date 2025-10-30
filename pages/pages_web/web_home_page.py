@@ -15,6 +15,8 @@ class WebHomePage(WebBasePage):
     SEARCH_INPUT = (By.ID, "search-input")
     BODY = (By.TAG_NAME, "body")
 
+    HOME_TOP_BANNER_LINK = (By.CSS_SELECTOR, "a[aria-label*='banner de topo']")
+
     BANNER = (By.ID, "ins-responsive-banner")
     BANNER_CLOSE = (By.CSS_SELECTOR, "#ins-responsive-banner svg.show-element")
 
@@ -44,6 +46,15 @@ class WebHomePage(WebBasePage):
 
     def open_americanas(self):
         self.open("https://www.americanas.com.br/")
+
+    def is_on_homepage(self):
+        try:
+            self.wait.until(
+                EC.presence_of_element_located(self.HOME_TOP_BANNER_LINK)
+            )
+            return True
+        except Exception:
+            return False
 
     def type_query(self, text: str):
         self.type(*self.SEARCH_INPUT, text=text)

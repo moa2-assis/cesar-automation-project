@@ -1,4 +1,4 @@
-# report_dashboard.py
+# utils/reporting.py
 # Dashboard dark + donut progress + filtros/busca/sort + colapso de erro
 # Mantém a API: reset_session, upsert_result, add_screenshot, add_video,
 # write_dashboard, write_and_open_dashboard, write_session_summary

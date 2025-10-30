@@ -73,42 +73,6 @@ class WebTempMailPage(WebBasePage):
             time.sleep(0.8)
         raise AssertionError(f"Não encontrei assunto contendo '{phrase}'.")
 
-    def get_access_code(self, tries: int = 20, pause: float = 1.0) -> str:
-        """
-        Procura qualquer assunto que contenha 'código de acesso' e retorna os últimos 6 dígitos.
-        Tenta algumas vezes, dando refresh de vez em quando.
-        """
-        self.wait_for_visibility(*self.NEW_MESSAGE_SUBJECTS)
-        for i in range(tries):
-            els = self.driver.find_elements(*self.NEW_MESSAGE_SUBJECTS)
-
-            for el in els:
-                raw = (el.get_attribute("title") or el.text or "").strip()
-                s = raw.lower()
-
-                if "código de acesso" in s or "codigo de acesso" in s:
-                    # regex
-                    m = re.findall(r"\d{6}", raw)
-                    if m:
-                        return m[-1]
-
-                    # fallback caso dê errado o regex acima
-                    digits = "".join(ch for ch in raw if ch.isdigit())
-                    if len(digits) >= 6:
-                        return digits[-6:]
-
-            if hasattr(self, "click_refresh_button") and (i % 3 == 2):
-                try:
-                    self.click_refresh_button()
-                except Exception:
-                    pass
-
-            time.sleep(pause)
-
-        raise AssertionError(
-            "No subject with 'código de acesso' containing 6 digits found."
-        )
-
     def open_temp_mail_in_new_tab(self):
         """Abre o temp-mail em NOVA aba (mantém aberta) e troca pra ela."""
         self.main_handle = self.driver.current_window_handle

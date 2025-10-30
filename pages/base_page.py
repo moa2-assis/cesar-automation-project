@@ -1,8 +1,16 @@
 # pages/base_page.py
+import time
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import (
+    TimeoutException,
+    StaleElementReferenceException,
+    ElementClickInterceptedException,
+    TimeoutException,
+)
 
 class BasePage:
     """Base genérica (comum a Appium e Selenium)."""
@@ -22,12 +30,56 @@ class BasePage:
         return self.wait.until(EC.element_to_be_clickable((by, locator)))
 
     # ações básicas
-    def click(self, by, locator):
+    def js_click(self, el) -> bool:
         try:
-            self.wait_clickable(by, locator).click()
-        except:
-            el = self.find_element(by, locator)
             self.driver.execute_script("arguments[0].click();", el)
+            return True
+        except Exception:
+            return False
+
+    def click(self, by, locator, retries: int = 3, block: str = "center"):
+        last_err = None
+        for attempt in range(1, retries + 1):
+            try:
+                el = self.wait_clickable(by, locator)
+
+                # tenta direto
+                try:
+                    el.click()
+                    return True
+                except (
+                    ElementClickInterceptedException,
+                    StaleElementReferenceException,
+                ) as e:
+                    last_err = e
+
+                # scroll + novo try
+                try:
+                    el = self.scroll_into_view(by, locator, block=block)
+                    time.sleep(0.1)
+                    el.click()
+                    return True
+                except (
+                    ElementClickInterceptedException,
+                    StaleElementReferenceException,
+                ) as e:
+                    last_err = e
+                except Exception as e:
+                    last_err = e
+                try:
+                    el = self.find_element(by, locator)
+                    if self.js_click(el):
+                        return True
+                except Exception as e:
+                    last_err = e
+
+            except (TimeoutException, StaleElementReferenceException) as e:
+                last_err = e
+
+            time.sleep(0.2 * attempt)
+        if last_err:
+            raise last_err
+        return False
 
     def type(self, by, locator, text: str, clear_first: bool = True):
         el = self.wait_for_visibility(by, locator)

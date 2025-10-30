@@ -58,7 +58,7 @@ def test_web_new_user_registration_password_setup(browser, json_data):
 
     # Step 7: **Verify Redirect:** Confirm that you have been redirected to the homepage.
     assert home.wait_search_input_visibility(), f"Search input not found."
-    assert "https://www.americanas.com.br/" == browser.current_url.lower(), f"Website isn't at homepage."
+    assert home.is_on_homepage(), f"Website isn't at homepage."
 
     # Step 8: **Validate Login:** Check if the new user's email is displayed in the page header.
     # temp_mail_saved
@@ -108,7 +108,8 @@ def test_web_new_user_registration_password_setup(browser, json_data):
     assert not account.is_save_password_enabled()
 
     # Step 13: **Set Valid Password:** Enter a password that meets all criteria and click "Save Password".
-    account.type_password(json_data["web"]["valid_password"])
+    temp_password_saved = json_data["web"]["valid_password"]
+    account.type_password(temp_password_saved)
     time.sleep(1)
     assert account.is_save_password_enabled()
     account.click_save_password()
@@ -120,3 +121,7 @@ def test_web_new_user_registration_password_setup(browser, json_data):
     assert set(new_password_masked) == {
         "*"
     }, f"Masked password should only contain asterisks but got: {new_password_masked}"
+
+    # Bonus: saving last used email + password on the json
+    account.save_last_email(temp_mail_saved)
+    account.save_last_password(temp_password_saved)

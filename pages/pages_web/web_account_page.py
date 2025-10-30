@@ -1,4 +1,8 @@
 import re
+import json
+from pathlib import Path
+from typing import Optional
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -102,12 +106,11 @@ class WebAccountPage(WebBasePage):
 
     def clear_password_strict(self):
         el = self.wait_for_visibility(*self.PASSWORD_FIELD)
-        # tenta clear normal
         try:
             el.clear()
         except Exception:
             pass
-        # Ctrl/Command + A e Delete
+
         try:
             el.send_keys(Keys.CONTROL, "a"); el.send_keys(Keys.DELETE)
         except Exception:
@@ -115,7 +118,7 @@ class WebAccountPage(WebBasePage):
                 el.send_keys(Keys.COMMAND, "a"); el.send_keys(Keys.DELETE)
             except Exception:
                 pass
-        # força pelo JS e dispara eventos pra UI revalidar
+            
         try:
             self.driver.execute_script("""
                 const el = arguments[0];
@@ -126,10 +129,57 @@ class WebAccountPage(WebBasePage):
         except Exception:
             pass
         return el
-    
+
     def get_masked_password(self) -> str:
         try:
             el = self.wait_for_visibility(*self.MASKED_PASSWORD)
             return (el.text or "").strip()
         except Exception:
             return ""
+
+    def default_json_path(self) -> Path:
+        here = Path(__file__).resolve()
+        root = here.parents[2]
+        assert root.name == "cesar-automation-project", f"Root inesperado: {root}"
+        return root / "data" / "testing.json"
+
+    # ========== EMAIL ==========
+
+    def save_last_email(self, email: str) -> None:
+        path = self.default_json_path()
+        with path.open(encoding="utf-8") as f:
+            data = json.load(f)
+
+        data["web"]["last_registered_email"] = (email or "").strip()
+
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+    def get_last_email(self) -> str:
+        path = self.default_json_path()
+        with path.open(encoding="utf-8") as f:
+            data = json.load(f)
+        return (data.get("web", {}).get("last_registered_email") or "").strip()
+
+    # ========== SENHA ==========
+
+    def save_last_password(self, password: str) -> None:
+        path = self.default_json_path()
+        with path.open(encoding="utf-8") as f:
+            data = json.load(f)
+
+        data["web"]["last_registered_password"] = password or ""
+
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+    def get_last_password(self) -> str:
+        path = self.default_json_path()
+        with path.open(encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("web", {}).get("last_registered_password") or ""
+    
+    def get_incorrect_password(self) -> str:
+        return "ThisIsWrongPassword12312"
+
+    
