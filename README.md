@@ -16,7 +16,7 @@ Este repo contém automações **WEB (Selenium)** e **MOBILE (Appium)** com:
     tests/
       tests_mobile/
       tests_web/
-    tests_compiled_info/   # saídas (dashboard, logs, screenshots, vídeos)
+    tests_compiled_info/   # dashboard, logs, screenshots, vídeos)
     utils/
       logger.py
       reporting.py
