@@ -7,20 +7,16 @@ from typing import Optional
 
 import pytest
 
-# Appium / Mobile
 from appium import webdriver as appwd
 from appium.options.common.base import AppiumOptions
 
-# Selenium / Web
 import selenium.webdriver as swd
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FFOptions
 
-# Utils do projeto
 from utils import reporting as R
 from utils.logger import setup_logger
 
-import csv
 import requests
 
 # ==========================================================
@@ -40,15 +36,16 @@ SESSION_DIR: Optional[Path] = None
 TEST_COUNTER = 0
 NODEID_TO_TESTDIR = {}
 
+
 # ==========================================================
-# CLI options (para sufixo mobile/web e notificações do browser)
+# CLI options (para sufixo mobile/web/api e notificações do browser)
 # ==========================================================
 def pytest_addoption(parser):
     parser.addoption(
         "--suite",
         action="store",
-        default=None,
-        help="Identificador do tipo de suíte: mobile ou web",
+        default=None,  # se None, vamos inferir por caminho passado
+        help="Identificador da suíte: web | mobile | api | mixed (default: inferido pelos caminhos dos testes)",
     )
     parser.addoption(
         "--notif",
@@ -101,13 +98,29 @@ def _build_console_logger():
     return logger
 
 
+def _infer_suite_from_args(pytest_args) -> str:
+    """
+    Inferência simples baseada nos caminhos passados ao pytest.
+    Ex.: pytest tests/tests_web -> web | tests/tests_mobile -> mobile | tests/tests_api -> api
+    Caso não bata, cai em 'mixed'.
+    """
+    joined = " ".join(str(a) for a in (pytest_args or [])).lower()
+    if "tests_api" in joined:
+        return "api"
+    if "tests_web" in joined:
+        return "web"
+    if "tests_mobile" in joined:
+        return "mobile"
+    return "mixed"
+
+
 # ===== pytest lifecycle =====
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionstart(session):
     """Cria o 'paizinho' da sessão e inicializa o logger de sessão dentro dele."""
     global LOG, SESSION_DIR
 
-    # 1) via CLI (--suite=mobile|web)
+    # 1) via CLI (--suite=mobile|web|api)
     cli_suite = session.config.getoption("--suite")
     if cli_suite:
         suite_name = cli_suite.strip().lower()
@@ -119,6 +132,8 @@ def pytest_sessionstart(session):
             suite_name = "mobile"
         elif "tests_web" in joined:
             suite_name = "web"
+        elif "tests_api" in joined:
+            suite_name = "api"
         else:
             suite_name = "mixed"
 
@@ -134,7 +149,7 @@ def pytest_sessionstart(session):
 
     LOG.info("=== Pytest session STARTED ===")
     LOG.info(f"Output dir: {SESSION_DIR}")
-
+    LOG.info(f"Suite: {suite_name}")
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
@@ -345,48 +360,116 @@ def browser(request):
 
 
 # ==========================================================
-# Fixtures auxiliares para APIs/CSV
+# Fixtures auxiliares para APIs
 # ==========================================================
 @pytest.fixture(scope="session")
-def base_json_url():
-    """Returns the base URL for the JSONPlaceholder API."""
-    return "https://jsonplaceholder.typicode.com"
-
-
-@pytest.fixture(scope="session")
-def base_httpbin_url():
-    """Returns the base URL for the httpbin API."""
-    return "https://httpbin.org"
+def base_api_url():
+    """Base URL da sua API local."""
+    return "http://127.0.0.1:8000"
 
 
 @pytest.fixture(scope="function")
 def api_client():
-    """Returns an API client (requests module)."""
+    """Cliente HTTP para testes de API (requests)."""
     return requests
-
-
-# ===== loader simples para CSV =====
-def load_csv_test_cases(path: str):
-    """Lê CSV e retorna lista de dicts (strings ‘cruas’, conversão no teste)."""
-    p = Path(path)
-    cases = []
-    with p.open(mode="r", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            cases.append(row)
-    return cases
 
 
 @pytest.fixture(scope="session")
 def json_data(pytestconfig):
     """Carrega o JSON de dados para os testes, a partir da raiz do projeto."""
     root_dir = Path(pytestconfig.rootpath)  # ex.: /Users/moa/cesar-automation-project
-    json_path = (
-        root_dir / "data" / "testing.json"
-    )  # ex.: /Users/moa/cesar-automation-project/data/testing.json
+    json_path = root_dir / "data" / "testing.json"
 
     if not json_path.exists():
         raise FileNotFoundError(f"Arquivo JSON de testes não encontrado: {json_path}")
 
     with json_path.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+@pytest.fixture
+def cleanup_wishlists(api_client, base_api_url):
+    """
+    Limpa todas as wishlists do usuário autenticado após o teste.
+    """
+    yield
+    url = f"{base_api_url}/wishlists"
+    token = getattr(api_client, "last_token", None)
+    if token:
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = api_client.get(url, headers=headers)
+        if resp.status_code == 200:
+            for w in resp.json():
+                wid = w.get("id")
+                if wid:
+                    api_client.delete(f"{url}/{wid}", headers=headers)
+
+
+@pytest.fixture
+def cleanup_products(api_client, base_api_url):
+    """
+    Limpa todos os produtos de todas as wishlists do usuário autenticado após o teste.
+    """
+    yield
+    base_wishlist_url = f"{base_api_url}/wishlists"
+    token = getattr(api_client, "last_token", None)
+    if not token:
+        return
+    headers = {"Authorization": f"Bearer {token}"}
+
+    w_resp = api_client.get(base_wishlist_url, headers=headers)
+    if w_resp.status_code != 200:
+        return
+
+    for wishlist in w_resp.json():
+        wid = wishlist.get("id")
+        if not wid:
+            continue
+        p_resp = api_client.get(f"{base_wishlist_url}/{wid}/products", headers=headers)
+        if p_resp.status_code == 200:
+            for product in p_resp.json():
+                pid = product.get("id")
+                if pid:
+                    api_client.delete(f"{base_api_url}/products/{pid}", headers=headers)
+
+
+@pytest.fixture
+def cleanup_users(api_client, base_api_url):
+    """
+    Limpa todos os dados associados ao usuário autenticado:
+    - produtos
+    - wishlists
+    - o próprio usuário (opcional)
+    """
+    yield
+    token = getattr(api_client, "last_token", None)
+    if not token:
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. Apagar produtos dentro de cada wishlist
+    wl_resp = api_client.get(f"{base_api_url}/wishlists", headers=headers)
+    if wl_resp.status_code == 200:
+        for w in wl_resp.json() or []:
+            wid = w.get("id")
+            if not wid:
+                continue
+            prod_resp = api_client.get(
+                f"{base_api_url}/wishlists/{wid}/products", headers=headers
+            )
+            if prod_resp.status_code == 200:
+                for p in prod_resp.json() or []:
+                    pid = p.get("id")
+                    if pid:
+                        api_client.delete(
+                            f"{base_api_url}/products/{pid}", headers=headers
+                        )
+
+            api_client.delete(f"{base_api_url}/wishlists/{wid}", headers=headers)
+
+    # 2. Apagar o próprio usuário (se a API tiver esse endpoint)
+    try:
+        api_client.delete(f"{base_api_url}/users/me", headers=headers)
+    except Exception:
+        pass
