@@ -39,6 +39,7 @@ def test_web_new_user_registration_password_setup(browser, json_data):
 
     # Step 4: **Enter Email:** Return to the Americanas website, enter the temporary email in the registration field, and click to send the verification code.
     assert login.type_email(temp_mail_saved), "Email field didnt' receive text."
+    time.sleep(1)
     assert login.click_submit_email(), "Submit email button not clicked."
     time.sleep(1)
 
