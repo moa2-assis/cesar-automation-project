@@ -9,8 +9,7 @@ class WebBasePage(BasePage):
     def open(self, url: str):
         self.driver.get(url)
 
-    # ---------- helpers básicos ----------
-
+    # helpers
     def wait_clickable(self, by, locator):
         return self.wait.until(
             EC.element_to_be_clickable((by, locator))
@@ -25,8 +24,7 @@ class WebBasePage(BasePage):
     def find_elements(self, by, locator):
         return self.driver.find_elements(by, locator)
 
-    # ---------- ações simples ----------
-
+    # ações
     def click(self, by, locator) -> bool:
         # espera ficar clicável
         element = self.wait_clickable(by, locator)

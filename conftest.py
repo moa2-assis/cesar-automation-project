@@ -247,11 +247,8 @@ def driver(request):
             "appium:appPackage": "com.b2w.americanas",
             "appium:ensureWebviewsHavePages": True,
             "appium:nativeWebScreenshot": True,
-            "appium:newCommandTimeout": 30000,
-            "appium:connectHardwareKeyboard": True,
             "appium:appWaitActivity": "com.b2w.americanas.MainActivity",
-            "appium:appWaitDuration": 30000,
-            "appium:autoGrantPermissions": True,
+            "appium:appWaitDuration": 30000
         }
     )
     try:
