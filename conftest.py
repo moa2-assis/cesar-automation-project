@@ -19,6 +19,10 @@ from utils.logger import setup_logger
 
 import requests
 
+# BROWSER=chrome pytest tests/tests_web --suite=web --notif=allow
+
+# BROWSER=firefox pytest tests/tests_web --suite=web --notif=allow
+
 # ==========================================================
 # CONFIGURAÇÃO RÁPIDA
 # ==========================================================
@@ -323,10 +327,10 @@ def browser(request):
         opts.set_preference("dom.webnotifications.enabled", True)
         opts.set_preference("dom.push.enabled", True)
         drv = swd.Firefox(options=opts)
-        drv.set_window_size(1366, 768)
+        drv.set_window_size(1920, 1080)
     else:
         opts = ChromeOptions()
-        opts.add_argument("--window-size=1366,768")
+        opts.add_argument("--window-size=1920,1080")
         # 1=allow, 2=block, 0=ask
         opts.add_experimental_option(
             "prefs",

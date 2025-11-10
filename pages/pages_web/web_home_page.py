@@ -13,6 +13,7 @@ from pages.pages_web.web_base_page import WebBasePage
 
 class WebHomePage(WebBasePage):
     SEARCH_INPUT = (By.ID, "search-input")
+    SEARCH_BUTTON = (By.CSS_SELECTOR, "button[type='submit']")
     BODY = (By.TAG_NAME, "body")
 
     HOME_TOP_BANNER_LINK = (By.CSS_SELECTOR, "a[aria-label*='banner de topo']")
@@ -56,8 +57,12 @@ class WebHomePage(WebBasePage):
         except Exception:
             return False
 
-    def type_query(self, text: str):
-        self.type(*self.SEARCH_INPUT, text=text)
+    def type_query(self, text):
+        try:
+            self.type(*self.SEARCH_INPUT, text=text)
+            return True
+        except Exception:
+            return False
 
     def close_banner_if_present(self) -> bool:
         """
@@ -128,3 +133,6 @@ class WebHomePage(WebBasePage):
     def click_my_account(self):
         el = self.wait_for_visibility(*self.ACCOUNT_HEADER)
         el.click()
+
+    def click_search(self):
+        self.click(*self.SEARCH_BUTTON)

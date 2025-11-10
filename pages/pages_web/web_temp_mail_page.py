@@ -86,7 +86,7 @@ class WebTempMailPage(WebBasePage):
         except TimeoutException:
             raise AssertionError("Refresh button not found on page.")
 
-        self.scroll_into_view(*self.REFRESH_BUTTON, block="center")
+        self.scroll_into_view(*self.REFRESH_BUTTON)
         el = self.wait.until(EC.element_to_be_clickable(self.REFRESH_BUTTON))
         try:
             el.click()
