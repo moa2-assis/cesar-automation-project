@@ -19,8 +19,10 @@ from utils.logger import setup_logger
 
 import requests
 
-# pytest -m "web or api" --suite=mixed --browser all
+# novo: pytest -m "web or api" --suite=mixed --browser all
 
+# antigo:
+# git checkout bade3c19467ed3295341cbd8716ed4191639097d
 # pytest tests/tests_web -m web --suite=web --browser all
 
 # pytest tests/tests_web -m web --suite=web --browser chrome
