@@ -45,7 +45,7 @@ def test_mobile_popup_title(driver, api_client, base_api_url, product_index):
     expected_name = product_data.get("Product")
     expected_price = home.normalize_price(product_data.get("Price"))
 
-    home.accept_runtime_permissions(duration=15)
+    home.accept_runtime_permissions(duration=8)
 
     # 2
     home.is_on_home()

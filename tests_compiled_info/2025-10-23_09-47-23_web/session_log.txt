@@ -1,6 +1,0 @@
-2025-10-23 09:47:23 - automation_tests - INFO - === Pytest session STARTED ===
-2025-10-23 09:47:23 - automation_tests - INFO - Output dir: tests_compiled_info/2025-10-23_09-47-23_web
-2025-10-23 09:47:23 - automation_tests - INFO - [DASHBOARD] auto-open desativado → apenas gerado no diretório
-2025-10-23 09:47:23 - automation_tests - INFO - === Pytest session FINISHED (exitstatus=4) ===
-2025-10-23 09:47:23 - automation_tests - INFO - Dashboard: tests_compiled_info/2025-10-23_09-47-23_web/dashboard.html
-2025-10-23 09:47:23 - automation_tests - INFO - Session log: tests_compiled_info/2025-10-23_09-47-23_web/session_log.txt

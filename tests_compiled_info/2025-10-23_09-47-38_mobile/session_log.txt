@@ -1,9 +1,0 @@
-2025-10-23 09:47:38 - automation_tests - INFO - === Pytest session STARTED ===
-2025-10-23 09:47:38 - automation_tests - INFO - Output dir: tests_compiled_info/2025-10-23_09-47-38_mobile
-2025-10-23 09:47:38 - automation_tests - INFO - === START test 001: tests/tests_mobile/test_testing_mobile.py::test_mobile_popup_title ===
-2025-10-23 09:47:38 - automation_tests - ERROR - [DRIVER] failed to create Appium driver: MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=4723): Max retries exceeded with url: /session (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x10cf584c0>: Failed to establish a new connection: [Errno 61] Connection refused'))
-2025-10-23 09:47:38 - automation_tests - ERROR - Dica: verifique se o Appium Server está on em http://127.0.0.1:4723 e se o emulator-5554 está rodando (adb devices).
-2025-10-23 09:47:38 - automation_tests - INFO - [DASHBOARD] auto-open desativado → apenas gerado no diretório
-2025-10-23 09:47:38 - automation_tests - INFO - === Pytest session FINISHED (exitstatus=0) ===
-2025-10-23 09:47:38 - automation_tests - INFO - Dashboard: tests_compiled_info/2025-10-23_09-47-38_mobile/dashboard.html
-2025-10-23 09:47:38 - automation_tests - INFO - Session log: tests_compiled_info/2025-10-23_09-47-38_mobile/session_log.txt

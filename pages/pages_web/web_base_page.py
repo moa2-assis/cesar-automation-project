@@ -25,7 +25,7 @@ class WebBasePage(BasePage):
         return self.driver.find_elements(by, locator)
 
     # ações
-    def click(self, by, locator) -> bool:
+    def click(self, by, locator):
         # espera ficar clicável
         element = self.wait_clickable(by, locator)
 
@@ -46,7 +46,7 @@ class WebBasePage(BasePage):
     def js_click(self, element):
         self.driver.execute_script("arguments[0].click();", element)
 
-    def type(self, by, locator, text: str) -> bool:
+    def type(self, by, locator, text):
         try:
             el = self.wait_visible(by, locator)
             el.clear()

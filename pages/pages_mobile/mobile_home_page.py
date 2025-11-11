@@ -6,7 +6,12 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import time
 
 class MobileHome(MobileBasePage):
-    SEARCH_INPUT = (AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().description("busque aqui seu produto")')
+    SEARCH_INPUT_CLICK = (AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().description("busque aqui seu produto")')
+
+    SEARCH_INPUT_SEND = (
+        AppiumBy.ANDROID_UIAUTOMATOR,
+        'new UiSelector().className("android.widget.ImageView").instance(0)',
+    )
 
     def accept_runtime_permissions(
         self, duration: float = 15.0, interval: float = 0.4
@@ -42,11 +47,11 @@ class MobileHome(MobileBasePage):
         return clicks
 
     def is_on_home(self):
-        return self.is_visible(*self.SEARCH_INPUT)
+        return self.is_visible(*self.SEARCH_INPUT_CLICK)
 
     def focus_search(self):
         try:
-            el = self.wait_for_visibility(*self.SEARCH_INPUT)
+            el = self.wait_for_visibility(*self.SEARCH_INPUT_CLICK)
             el.click()
             return True
         except Exception as e:
@@ -62,7 +67,7 @@ class MobileHome(MobileBasePage):
 
     def type_query(self, text):
         try:
-            el = self.wait_for_visibility(*self.SEARCH_INPUT)
+            el = self.wait_for_visibility(*self.SEARCH_INPUT_SEND)
             el.clear()
             el.send_keys(text)
             return True

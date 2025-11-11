@@ -19,19 +19,23 @@ from utils.logger import setup_logger
 
 import requests
 
-# BROWSER=chrome pytest tests/tests_web --suite=web --notif=allow
+# pytest -m "web or api" --suite=mixed --browser all
 
-# BROWSER=firefox pytest tests/tests_web --suite=web --notif=allow
+# pytest tests/tests_web -m web --suite=web --browser all
+
+# pytest tests/tests_web -m web --suite=web --browser chrome
+
+# pytest tests/tests_web -m web --suite=web --browser firefox
 
 # ==========================================================
 # CONFIGURAÇÃO RÁPIDA
 # ==========================================================
 # Abre o dashboard HTML ao fim da execução
-OPEN_DASHBOARD = False
+OPEN_DASHBOARD = True
 # Salva screenshots/vídeos e quaisquer artefatos de erro
-SAVE_ARTIFACTS = False
+SAVE_ARTIFACTS = True
 # Salva logs em arquivos (session_log.txt e test_log.txt)
-SAVE_EXEC_LOGS = False
+SAVE_EXEC_LOGS = True
 # ==========================================================
 
 # ===== estado da sessão =====
@@ -56,6 +60,12 @@ def pytest_addoption(parser):
         action="store",
         default="allow",  # allow | block | ask
         help="Controle de notificações do navegador: allow | block | ask (default: allow)",
+    )
+    parser.addoption(
+        "--browser",
+        action="store",
+        default=os.getenv("BROWSER", "chrome"),
+        help="chrome | firefox | all (default: env BROWSER ou 'chrome')",
     )
 
 
@@ -102,20 +112,42 @@ def _build_console_logger():
     return logger
 
 
-def _infer_suite_from_args(pytest_args) -> str:
-    """
-    Inferência simples baseada nos caminhos passados ao pytest.
-    Ex.: pytest tests/tests_web -> web | tests/tests_mobile -> mobile | tests/tests_api -> api
-    Caso não bata, cai em 'mixed'.
-    """
-    joined = " ".join(str(a) for a in (pytest_args or [])).lower()
-    if "tests_api" in joined:
-        return "api"
-    if "tests_web" in joined:
-        return "web"
+def _normalize_browsers(opt: str):
+    opt = (opt or "").lower().strip()
+    if opt in ("all", "both"):
+        return ["chrome", "firefox"]
+    if "," in opt:
+        return [b.strip() for b in opt.split(",") if b.strip()]
+    return [opt or "chrome"]
+
+
+def _infer_suite_from_config(config) -> str:
+    cli_suite = config.getoption("--suite")
+    if cli_suite:
+        return cli_suite.strip().lower()
+    # fallback: deduz pelos args (igual você já faz)
+    args = getattr(config, "args", []) or []
+    joined = " ".join(str(a) for a in args).lower()
     if "tests_mobile" in joined:
         return "mobile"
+    if "tests_web" in joined:
+        return "web"
+    if "tests_api" in joined:
+        return "api"
     return "mixed"
+
+
+def pytest_generate_tests(metafunc):
+    """
+    Se o teste usa a fixture 'browser' (Selenium), parametriza com os navegadores
+    solicitados via --browser/BROWSER **apenas** quando a suíte for web/mixed.
+    """
+    if "browser" in metafunc.fixturenames:
+        suite = _infer_suite_from_config(metafunc.config)
+        if suite in ("web", "mixed"):
+            opt = metafunc.config.getoption("--browser")
+            browsers = _normalize_browsers(opt)
+            metafunc.parametrize("browser", browsers, indirect=True, scope="function")
 
 
 # ===== pytest lifecycle =====
@@ -248,7 +280,10 @@ def driver(request):
             "appium:ensureWebviewsHavePages": True,
             "appium:nativeWebScreenshot": True,
             "appium:appWaitActivity": "com.b2w.americanas.MainActivity",
-            "appium:appWaitDuration": 30000
+            "appium:appWaitDuration": 30000,
+            "appium:autoGrantPermissions": True,
+            # "appium:noReset": False,
+            # "appium:fullReset": True,
         }
     )
     try:
@@ -310,15 +345,21 @@ def driver(request):
 @pytest.fixture(scope="function")
 def browser(request):
     """Inicializa Chrome ou Firefox para testes WEB e integra ao dashboard."""
-    browser_name = os.getenv("BROWSER", "chrome").lower()
+    # prioridade: param indireto > --browser > env BROWSER > 'chrome'
+    browser_name = getattr(request, "param", None)
+    if not browser_name:
+        browser_name = (
+            request.config.getoption("--browser") or os.getenv("BROWSER", "chrome")
+        ).lower()
+    else:
+        browser_name = str(browser_name).lower()
+
     notif_mode = (request.config.getoption("--notif") or "allow").lower()
     notif_map = {"allow": 1, "block": 2, "ask": 0}
     notif_value = notif_map.get(notif_mode, 1)
 
-    # --- cria driver ---
     if browser_name == "firefox":
         opts = FFOptions()
-        # Permissões no Firefox (1=allow, 2=block, 0=ask)
         opts.set_preference("permissions.default.desktop-notification", notif_value)
         opts.set_preference("permissions.default.geo", notif_value)
         opts.set_preference("dom.webnotifications.enabled", True)
@@ -328,7 +369,6 @@ def browser(request):
     else:
         opts = ChromeOptions()
         opts.add_argument("--window-size=1920,1080")
-        # 1=allow, 2=block, 0=ask
         opts.add_experimental_option(
             "prefs",
             {"profile.default_content_setting_values.notifications": notif_value},
@@ -341,7 +381,6 @@ def browser(request):
 
     yield drv
 
-    # --- teardown (screenshot em falha + dashboard) ---
     try:
         rep_call = getattr(request.node, "rep_call", None)
         rep_setup = getattr(request.node, "rep_setup", None)
@@ -358,7 +397,6 @@ def browser(request):
     finally:
         LOG.info("[WEB] Quitting browser.")
         drv.quit()
-
 
 # ==========================================================
 # Fixtures auxiliares para APIs

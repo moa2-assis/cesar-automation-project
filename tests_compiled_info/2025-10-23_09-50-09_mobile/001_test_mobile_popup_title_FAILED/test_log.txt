@@ -1,4 +1,0 @@
-2025-10-23 09:50:31 - START tests/tests_mobile/test_testing_mobile.py::test_mobile_popup_title
-2025-10-23 09:50:31 - END   tests/tests_mobile/test_testing_mobile.py::test_mobile_popup_title | outcome=failed | duration=10.24s
-2025-10-23 09:50:32 - ARTIFACT screenshot: screenshot_test_mobile_popup_title.png
-2025-10-23 09:50:34 - ARTIFACT video: video_test_mobile_popup_title.mp4
