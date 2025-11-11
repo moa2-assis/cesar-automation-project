@@ -17,7 +17,9 @@ class WebTempMailPage(WebBasePage):
     REFRESH_BUTTON = (By.CSS_SELECTOR, "div.refresh.truncate.w-full")
     NEW_MESSAGE_SUBJECTS = (By.CSS_SELECTOR, "span.message__subject")
 
-    previous_codes = set()
+    def __init__(self, driver):
+        super().__init__(driver)
+        self.previous_codes = set()
 
     def wait_subjects_present(self, timeout: int = 20, refresh_each: int = 4):
         end = time.time() + timeout

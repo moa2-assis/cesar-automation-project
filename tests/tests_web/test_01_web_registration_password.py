@@ -49,7 +49,7 @@ def test_web_new_user_registration_password_setup(browser, json_data):
     temp_mail.click_refresh_button()
     time.sleep(2)
     temp_mail.wait_subjects_present()
-    subject_el = temp_mail.wait_subject_with_phrase("código de acesso", timeout=40)
+    temp_mail.wait_subject_with_phrase("código de acesso", timeout=40)
     login_temp_token_saved = temp_mail.get_fresh_access_code()
 
     # Step 6: **Confirm Registration:** Return to the Americanas website and enter the code to finalize the registration.
@@ -123,6 +123,6 @@ def test_web_new_user_registration_password_setup(browser, json_data):
         "*"
     }, f"Masked password should only contain asterisks but got: {new_password_masked}"
 
-    # Bonus: saving last used email + password on the json
+    # Bonus: saving last used email + password on the json for future use
     account.save_last_email(temp_mail_saved)
     account.save_last_password(temp_password_saved)

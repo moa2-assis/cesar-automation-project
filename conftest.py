@@ -276,6 +276,7 @@ def driver(request):
     options.load_capabilities(
         {
             "platformName": "Android",
+<<<<<<< Updated upstream
             "appium:deviceName": "emulator-5554",
             "appium:automationName": "UiAutomator2",
             "appium:appPackage": "com.b2w.americanas",
@@ -286,6 +287,18 @@ def driver(request):
             "appium:autoGrantPermissions": True,
             # "appium:noReset": False,
             # "appium:fullReset": True,
+=======
+            "deviceName": "emulator-5554",
+            "automationName": "UiAutomator2",
+            "appPackage": "com.b2w.americanas",
+            "noReset": False,
+            "fullReset": False,
+            "appWaitActivity": "com.b2w.americanas.MainActivity",
+            "appWaitDuration": 30000,
+            "unicodeKeyboard": True,
+            "resetKeyboard": True,
+            "autoGrantPermissions": True,
+>>>>>>> Stashed changes
         }
     )
     try:
