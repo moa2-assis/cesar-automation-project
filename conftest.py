@@ -1,23 +1,27 @@
 import base64
 import json
 import os
+import selenium.webdriver as swd
+import pytest
+import requests
+
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
-import pytest
-
 from appium import webdriver as appwd
 from appium.options.common.base import AppiumOptions
 
-import selenium.webdriver as swd
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FFOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
+
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 
 from utils import reporting as R
 from utils.logger import setup_logger
-
-import requests
 
 # novo: pytest -m "web or api" --suite=mixed --browser all
 
@@ -32,8 +36,10 @@ import requests
 # ==========================================================
 # CONFIGURAÇÃO RÁPIDA
 # ==========================================================
-# Abre o dashboard HTML ao fim da execução
+# Abre o dashboard HTML ao fim da execução, e se passar variável "export CI=true" pelo Jenkins, reescreve para nunca abrir automático
 OPEN_DASHBOARD = True
+if os.getenv("CI", "").lower() == "true":
+    OPEN_DASHBOARD = False
 # Salva screenshots/vídeos e quaisquer artefatos de erro
 SAVE_ARTIFACTS = True
 # Salva logs em arquivos (session_log.txt e test_log.txt)
@@ -366,16 +372,24 @@ def browser(request):
         opts.set_preference("permissions.default.geo", notif_value)
         opts.set_preference("dom.webnotifications.enabled", True)
         opts.set_preference("dom.push.enabled", True)
-        drv = swd.Firefox(options=opts)
+
+        # 👉 usando GeckoDriverManager (funciona no Mac e no Jenkins)
+        service = FirefoxService(GeckoDriverManager().install())
+        drv = swd.Firefox(service=service, options=opts)
         drv.set_window_size(1920, 1080)
+
     else:
+        # default: chrome
         opts = ChromeOptions()
         opts.add_argument("--window-size=1920,1080")
         opts.add_experimental_option(
             "prefs",
             {"profile.default_content_setting_values.notifications": notif_value},
         )
-        drv = swd.Chrome(options=opts)
+
+        # 👉 usando ChromeDriverManager (funciona no Mac e no Jenkins)
+        service = ChromeService(ChromeDriverManager().install())
+        drv = swd.Chrome(service=service, options=opts)
 
     LOG.info(
         f"[WEB] Browser session started ({browser_name}). notifications={notif_mode}"

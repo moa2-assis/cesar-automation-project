@@ -29,6 +29,7 @@ class WebSearchResultsPage(WebBasePage):
         for card in cards:
             try:
                 name_el = card.find_element(*self.PRODUCT_NAME)
+                self.scroll_into_view(*self.PRODUCT_NAME, block="start")
             except NoSuchElementException:
                 continue
 

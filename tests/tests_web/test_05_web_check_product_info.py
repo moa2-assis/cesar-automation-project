@@ -67,7 +67,7 @@ def test_search_view_product_from_wishlist(api_client, base_api_url, browser, pr
     search.switch_to_list_view()
     time.sleep(2)
     card_list = search.find_card_by_exact_name(expected_name)
-    print(card_list)
+    
     assert (
         card_list is not None
     ), f"Product '{expected_name}' didn't show up on the search"

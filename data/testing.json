@@ -1,10 +1,11 @@
 {
     "web": {
         "invalid_passwords": {
-            "lessthan8char": "Olaola1",
-            "nonumbers": "Olaolaola",
-            "nolowercase": "OLAOLAOLA1",
-            "nouppercase": "olaolaola1"
+            "_info": "Não usar DÍGITO em nome de variável aqui no .json, manter SNAKE CASE",
+            "less_than_minimum": "Olaola1", 
+            "no_numbers": "Olaolaola",
+            "no_lower_case": "OLAOLAOLA1",
+            "no_upper_case": "olaolaola1"
         },
         "valid_password": "Olaolaola1",
         "last_registered_email": "gs2b6mqlqh@mkzaso.com",
@@ -14,7 +15,7 @@
         }
     },
     "api": {
-        "base_url": "https://jsonplaceholder.typicode.com/",
+        "base_url": "http://127.0.0.1:8000",
         "user": {
             "email": "",
             "password": "password123",

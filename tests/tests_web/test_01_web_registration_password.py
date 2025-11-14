@@ -89,22 +89,22 @@ def test_web_new_user_registration_password_setup(browser, json_data):
 
     # Step 12: **Test Password Rules:**
     #     *   Try to save a password with less than 8 characters. The "Save" button should be inactive.
-    account.type_password(json_data["web"]["invalid_passwords"]["lessthan8char"])
+    account.type_password(json_data["web"]["invalid_passwords"]["less_than_minimum"])
     time.sleep(1)
     assert not account.is_save_password_enabled()
 
     #     *   Try to save a password without numbers. The "Save" button should be inactive.
-    account.type_password(json_data["web"]["invalid_passwords"]["nonumbers"])
+    account.type_password(json_data["web"]["invalid_passwords"]["no_numbers"])
     time.sleep(1)
     assert not account.is_save_password_enabled()
 
     #     *   Try to save a password without lowercase letters. The "Save" button should be inactive.
-    account.type_password(json_data["web"]["invalid_passwords"]["nolowercase"])
+    account.type_password(json_data["web"]["invalid_passwords"]["no_lower_case"])
     time.sleep(1)
     assert not account.is_save_password_enabled()
 
     #     *   Try to save a password without uppercase letters. The "Save" button should be inactive.
-    account.type_password(json_data["web"]["invalid_passwords"]["nouppercase"])
+    account.type_password(json_data["web"]["invalid_passwords"]["no_upper_case"])
     time.sleep(1)
     assert not account.is_save_password_enabled()
 
