@@ -373,11 +373,9 @@ def browser(request):
         opts.set_preference("dom.webnotifications.enabled", True)
         opts.set_preference("dom.push.enabled", True)
 
-        # 👉 usando GeckoDriverManager (funciona no Mac e no Jenkins)
         service = FirefoxService(GeckoDriverManager().install())
         drv = swd.Firefox(service=service, options=opts)
         drv.set_window_size(1920, 1080)
-
     else:
         # default: chrome
         opts = ChromeOptions()

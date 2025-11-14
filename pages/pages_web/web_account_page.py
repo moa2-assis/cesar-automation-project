@@ -5,7 +5,6 @@ from typing import Optional
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
     TimeoutException,
@@ -118,7 +117,7 @@ class WebAccountPage(WebBasePage):
                 el.send_keys(Keys.COMMAND, "a"); el.send_keys(Keys.DELETE)
             except Exception:
                 pass
-            
+
         try:
             self.driver.execute_script("""
                 const el = arguments[0];
@@ -138,10 +137,10 @@ class WebAccountPage(WebBasePage):
             return ""
 
     def default_json_path(self) -> Path:
-        here = Path(__file__).resolve()
-        root = here.parents[2]
-        assert root.name == "cesar-automation-project", f"Root inesperado: {root}"
-        return root / "data" / "testing.json"
+        root = Path(__file__).resolve().parents[2]
+        data_dir = root / "data"
+        data_dir.mkdir(exist_ok=True)
+        return data_dir / "testing.json"
 
     # ========== EMAIL ==========
 
@@ -178,8 +177,6 @@ class WebAccountPage(WebBasePage):
         with path.open(encoding="utf-8") as f:
             data = json.load(f)
         return data.get("web", {}).get("last_registered_password") or ""
-    
+
     def get_incorrect_password(self) -> str:
         return "ThisIsWrongPassword12312"
-
-    
