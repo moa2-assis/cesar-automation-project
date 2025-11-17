@@ -567,16 +567,23 @@ def _build_dashboard_html(session_dir_name: str, dir_path: Path) -> str:
 
 def write_dashboard(output_dir: Path) -> Path:
     """Gera o dashboard.html sem abrir o navegador."""
+    output_dir = Path(output_dir)
     ensure_dir(str(output_dir))
-    path = Path(output_dir) / "dashboard.html"
+
+    html_path = output_dir / "dashboard.html"
+    html = _build_dashboard_html(output_dir.name, output_dir)
+    html_path.write_text(html, encoding="utf-8")
+
     root_dir = Path(__file__).resolve().parents[1]
-    html = _build_dashboard_html(Path(output_dir).name, output_dir)
+
     copy_output_dir = root_dir / "output"
-    copy_output_dir.mkdir(exist_ok=True)
-    shutil.copy2(output_dir, copy_output_dir / "dashboard_latest.html")
-    path.write_text(html, encoding="utf-8")
-    print(f"\nDashboard written to {path}")
-    return path
+    copy_output_dir.mkdir(parents=True, exist_ok=True)
+    latest_path = copy_output_dir / "dashboard_latest.html"
+    
+    shutil.copy2(html_path, latest_path)
+    print(f"\nDashboard written to {html_path}")
+    print(f"Latest dashboard copy: {latest_path}")
+    return html_path
 
 
 def write_and_open_dashboard(output_dir: Path) -> None:
