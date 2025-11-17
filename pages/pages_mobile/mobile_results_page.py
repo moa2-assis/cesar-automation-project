@@ -9,15 +9,14 @@ from pages.pages_mobile.mobile_base_page import MobileBasePage
 
 
 class MobileSearchResultsPage(MobileBasePage):
-    CARD_ANY_PRICE = (AppiumBy.ANDROID_UIAUTOMATOR,
-        'new UiSelector().descriptionContains("R$")')
-
-    EMPTY_HINTS = [
-        "nenhum resultado",
-        "não encontramos",
-        "sem resultados",
-        "tente outro termo",
-    ]
+    PRODUCT_PRICE = (AppiumBy.ANDROID_UIAUTOMATOR,
+        'new UiSelector().descriptionContains("{}")')
+    
+    FILTER_BUTTON = (AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().resourceId('Filtrar')")
+    
+    def click_grid_list_button(self):
+        # parent =
+        return 0
 
     def _get_desc(self, el):
         return (el.get_attribute("contentDescription") or "").strip()
@@ -27,10 +26,6 @@ class MobileSearchResultsPage(MobileBasePage):
 
     def _is_price_line(self, ln):
         return "R$" in (ln or "")
-
-    def _looks_like_parcel(self, ln):
-        l = (ln or "").lower()
-        return any(x in l for x in ("x", "vezes", "parcela", "parcelas", "em "))
 
     def _pick_title_from_desc(self, desc):
         lines = self._split_lines(desc)
