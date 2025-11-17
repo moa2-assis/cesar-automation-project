@@ -570,10 +570,10 @@ def write_dashboard(output_dir: Path) -> Path:
     ensure_dir(str(output_dir))
     path = Path(output_dir) / "dashboard.html"
     root_dir = Path(__file__).resolve().parents[1]
+    html = _build_dashboard_html(Path(output_dir).name, output_dir)
     copy_output_dir = root_dir / "output"
     copy_output_dir.mkdir(exist_ok=True)
     shutil.copy2(output_dir, copy_output_dir / "dashboard_latest.html")
-    html = _build_dashboard_html(Path(output_dir).name, output_dir)
     path.write_text(html, encoding="utf-8")
     print(f"\nDashboard written to {path}")
     return path
